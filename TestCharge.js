@@ -15,10 +15,12 @@ class TestCharge {
 	}
 
 	draw(context) {
-		context.strokeStyle = "black";
-		context.fillStyle = "black";
+		const power = Math.round(
+			lerp(255, 0, clamp(mag(this.superposition) / 50, 0, 1)),
+		);
+		this.superposition = scalar(norm(this.superposition), 50);
 		context.beginPath();
-		context.strokeStyle = "red";
+		context.strokeStyle = `rgb(255, ${power}, 255)`;
 		context.lineWidth = 3;
 		context.moveTo(this.x, this.y);
 		context.lineTo(
@@ -26,8 +28,5 @@ class TestCharge {
 			this.y + this.superposition.y,
 		);
 		context.stroke();
-		// context.moveTo(this.x, this.y);
-		// context.arc(this.x, this.y, 5, 0, Math.PI * 2);
-		// context.fill();
 	}
 }

@@ -17,17 +17,12 @@ class StationaryCharge {
 			x: dx,
 			y: dy,
 		};
-		// normalize the force vector
-		const deltaMagnitude = Math.sqrt(dx * dx + dy * dy);
-		result.x /= deltaMagnitude;
-		result.y /= deltaMagnitude;
+		// normalize the force vector (for directional purposes)
+		result = norm(result);
 
 		// determine the force vector based off of Coulomb's Law
-		let k = 50;
-		const coulombMagnitude = 1;
-		// let k = 5000;
-		// const coulombMagnitude = 1 / deltaMagnitude;
-
+		let k = 2500;
+		const coulombMagnitude = 1 / mag({ x: dx, y: dy });
 		result.x *= k * coulombMagnitude;
 		result.y *= k * coulombMagnitude;
 
@@ -49,6 +44,6 @@ class StationaryCharge {
 	collision(x, y) {
 		const dx = x - this.x;
 		const dy = y - this.y;
-		return Math.sqrt(dx * dx + dy * dy) <= this.radius;
+		return Math.sqrt(dx * dx + dy * dy) < this.radius;
 	}
 }

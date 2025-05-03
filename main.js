@@ -14,8 +14,8 @@ document.body.onmousemove = (e) => {
 
 let charges = [];
 let testCharges = [];
-let xSpacing = 10;
-let ySpacing = 10;
+let xSpacing = 35;
+let ySpacing = 35;
 for (let x = 0; x <= 1280; x += xSpacing) {
 	for (let y = 0; y <= 720; y += ySpacing) {
 		testCharges.push(new TestCharge(x, y));

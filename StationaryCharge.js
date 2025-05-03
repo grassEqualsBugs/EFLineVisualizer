@@ -3,7 +3,7 @@ class StationaryCharge {
 		this.x = x;
 		this.y = y;
 		this.charge = charge;
-		this.radius = 20;
+		this.radius = 10;
 		this.positiveColor = "blue";
 		this.negativeColor = "red";
 		this.held = false;

@@ -16,12 +16,12 @@ class TestCharge {
 
 	draw(context) {
 		const power = Math.round(
-			lerp(255, 0, clamp(mag(this.superposition) / 50, 0, 1)),
+			lerp(255, 0, clamp(mag(this.superposition) / 60, 0, 1)),
 		);
-		this.superposition = scalar(norm(this.superposition), 50);
+		this.superposition = scalar(norm(this.superposition), 20);
 		context.beginPath();
 		context.strokeStyle = `rgb(255, ${power}, 255)`;
-		context.lineWidth = 3;
+		context.lineWidth = 2;
 		context.moveTo(this.x, this.y);
 		context.lineTo(
 			this.x + this.superposition.x,

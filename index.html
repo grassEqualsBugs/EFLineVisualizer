@@ -3,16 +3,28 @@
 	<head>
 		<title>EF Line Visualizer</title>
 		<style>
+			@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
+			body {
+				font-size: 20px;
+				font-family: Roboto;
+				background-color: gray;
+			}
 			canvas {
 				border: 2px solid black;
 			}
 		</style>
 	</head>
 	<body>
-		<canvas id="canv" width="1280" height="720"></canvas>
+		<canvas id="canv" width="780" height="438"></canvas>
 		<script src="utils.js"></script>
 		<script src="TestCharge.js"></script>
 		<script src="StationaryCharge.js"></script>
 		<script src="main.js"></script>
+		<h2>CONTROLS:</h2>
+		<p>P -> Spawn stationary positively charged particle</p>
+		<p>N -> Spawn stationary negatively charged particle</p>
+		<p>E (while hovering over particle) -> Despawn particle</p>
+		<p>Hold down left click (while on particle) -> Move particle</p>
+		<p>R -> Restart</p>
 	</body>
 </html>

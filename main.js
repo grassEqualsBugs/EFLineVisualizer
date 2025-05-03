@@ -14,10 +14,10 @@ document.body.onmousemove = (e) => {
 
 let charges = [];
 let testCharges = [];
-let xSpacing = 35;
-let ySpacing = 35;
-for (let x = 0; x <= 1280; x += xSpacing) {
-	for (let y = 0; y <= 720; y += ySpacing) {
+let xSpacing = 15;
+let ySpacing = 15;
+for (let x = 0; x <= canvas.clientWidth; x += xSpacing) {
+	for (let y = 0; y <= canvas.clientHeight; y += ySpacing) {
 		testCharges.push(new TestCharge(x, y));
 	}
 }
@@ -62,7 +62,8 @@ window.addEventListener("keydown", (e) => {
 
 (function step() {
 	update();
-	context.clearRect(0, 0, 1280, 720);
+	context.fillStyle = "white";
+	context.fillRect(0, 0, 1280, 720);
 	draw();
 	window.requestAnimationFrame(step);
 })();

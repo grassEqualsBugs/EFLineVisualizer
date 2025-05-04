@@ -14,13 +14,18 @@ class TestCharge {
 		});
 	}
 
+	// called after updateSuperposition
 	draw(context) {
-		const power = Math.round(
-			lerp(255, 0, clamp(mag(this.superposition) / 60, 0, 1)),
+		const colorPower = Math.round(
+			lerp(255, 0, clamp(mag(this.superposition) / 40, 0, 1)),
 		);
-		this.superposition = scalar(norm(this.superposition), 20);
+		const adjustedMagnitude = clamp(mag(this.superposition), 0, 20);
+		this.superposition = scalar(
+			norm(this.superposition),
+			adjustedMagnitude,
+		);
 		context.beginPath();
-		context.strokeStyle = `rgb(255, ${power}, 255)`;
+		context.strokeStyle = `rgb(255, ${colorPower}, 255)`;
 		context.lineWidth = 2;
 		context.moveTo(this.x, this.y);
 		context.lineTo(

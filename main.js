@@ -14,8 +14,8 @@ document.body.onmousemove = (e) => {
 
 let charges = [];
 let testCharges = [];
-let xSpacing = 15;
-let ySpacing = 15;
+let xSpacing = 20;
+let ySpacing = 20;
 for (let x = 0; x <= canvas.clientWidth; x += xSpacing) {
 	for (let y = 0; y <= canvas.clientHeight; y += ySpacing) {
 		testCharges.push(new TestCharge(x, y));
@@ -30,8 +30,8 @@ function update() {
 	}
 	for (let i = 0; i < charges.length; i++) {
 		if (charges[i].held) {
-			charges[i].x = mousePos.x - charges[i].radius / 2;
-			charges[i].y = mousePos.y - charges[i].radius / 2;
+			charges[i].x = mousePos.x - charges[i].radius;
+			charges[i].y = mousePos.y - charges[i].radius;
 		}
 	}
 	for (let i = 0; i < testCharges.length; i++)

@@ -19,3 +19,7 @@ function clamp(x, min, max) {
 function lerp(a, b, t) {
 	return a + (b - a) * t;
 }
+
+function smoothstep(x, k) {
+	return Math.pow(x, k) / (Math.pow(x, k) + Math.pow(1 - x, k));
+}

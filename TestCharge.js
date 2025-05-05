@@ -1,8 +1,9 @@
 class TestCharge {
-	constructor(x, y) {
+	constructor(x, y, spacing) {
 		this.x = x;
 		this.y = y;
 		this.superposition = { x: 0, y: 0 };
+		this.spacing = spacing;
 	}
 
 	updateSuperposition(charges) {
@@ -16,7 +17,11 @@ class TestCharge {
 
 	// called after updateSuperposition
 	draw(context) {
-		const adjustedMagnitude = clamp(mag(this.superposition), 0, 20);
+		const adjustedMagnitude = clamp(
+			mag(this.superposition),
+			0,
+			this.spacing,
+		);
 		this.superposition = scalar(
 			norm(this.superposition),
 			adjustedMagnitude,

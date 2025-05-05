@@ -14,11 +14,10 @@ document.body.onmousemove = (e) => {
 
 let charges = [];
 let testCharges = [];
-let xSpacing = 20;
-let ySpacing = 20;
-for (let x = 0; x <= canvas.clientWidth; x += xSpacing) {
-	for (let y = 0; y <= canvas.clientHeight; y += ySpacing) {
-		testCharges.push(new TestCharge(x, y));
+const spacing = 20;
+for (let x = 0; x <= canvas.clientWidth; x += spacing) {
+	for (let y = 0; y <= canvas.clientHeight; y += spacing) {
+		testCharges.push(new TestCharge(x, y, spacing));
 	}
 }
 
@@ -43,7 +42,7 @@ function draw() {
 	for (let i = 0; i < charges.length; i++) charges[i].draw(context);
 }
 
-window.addEventListener("keydown", (e) => {
+window.addEventListener("keyup", (e) => {
 	if (e.key == "p") {
 		charges.push(new StationaryCharge(mousePos.x, mousePos.y, 1));
 	} else if (e.key == "n") {
@@ -57,6 +56,18 @@ window.addEventListener("keydown", (e) => {
 		}
 	} else if (e.key == "r") {
 		charges = [];
+	} else if (e.key == "s") {
+		const newSpacing = Number(prompt("New spacing: "));
+		if (newSpacing < 5) {
+			alert("Minimum spacing is 5");
+		} else {
+			testCharges = [];
+			for (let x = 0; x <= canvas.clientWidth; x += newSpacing) {
+				for (let y = 0; y <= canvas.clientHeight; y += newSpacing) {
+					testCharges.push(new TestCharge(x, y, newSpacing));
+				}
+			}
+		}
 	}
 });
 

@@ -16,21 +16,59 @@ class TestCharge {
 
 	// called after updateSuperposition
 	draw(context) {
-		const colorPower = Math.round(
-			lerp(255, 0, clamp(mag(this.superposition) / 40, 0, 1)),
-		);
 		const adjustedMagnitude = clamp(mag(this.superposition), 0, 20);
 		this.superposition = scalar(
 			norm(this.superposition),
 			adjustedMagnitude,
 		);
 		context.beginPath();
-		context.strokeStyle = `rgb(255, ${colorPower}, 255)`;
-		context.lineWidth = 2;
-		context.moveTo(this.x, this.y);
+		context.strokeStyle = `rgb(255, 0, 255)`;
+		context.lineWidth = 0.75;
+		context.moveTo(
+			this.x - this.superposition.x / 2,
+			this.y - this.superposition.y / 2,
+		);
 		context.lineTo(
-			this.x + this.superposition.x,
-			this.y + this.superposition.y,
+			this.x + this.superposition.x / 2,
+			this.y + this.superposition.y / 2,
+		);
+		const leftArrowLine = scalar(
+			{
+				x:
+					((-this.superposition.x + this.superposition.y) *
+						Math.sqrt(2)) /
+					2,
+				y:
+					(-(this.superposition.x + this.superposition.y) *
+						Math.sqrt(2)) /
+					2,
+			},
+			0.25,
+		);
+		context.lineTo(
+			this.x + this.superposition.x / 2 + leftArrowLine.x,
+			this.y + this.superposition.y / 2 + leftArrowLine.y,
+		);
+		const rightArrowLine = scalar(
+			{
+				x:
+					(-(this.superposition.x + this.superposition.y) *
+						Math.sqrt(2)) /
+					2,
+				y:
+					((this.superposition.x - this.superposition.y) *
+						Math.sqrt(2)) /
+					2,
+			},
+			0.25,
+		);
+		context.moveTo(
+			this.x + this.superposition.x / 2,
+			this.y + this.superposition.y / 2,
+		);
+		context.lineTo(
+			this.x + this.superposition.x / 2 + rightArrowLine.x,
+			this.y + this.superposition.y / 2 + rightArrowLine.y,
 		);
 		context.stroke();
 	}

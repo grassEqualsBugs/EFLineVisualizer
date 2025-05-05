@@ -21,15 +21,11 @@ class StationaryCharge {
 		result = norm(result);
 
 		// determine the force vector based off of Coulomb's Law
-		let k = 1750;
-		const coulombMagnitude = 1 / mag({ x: dx, y: dy });
+		let k = 200000;
+		const coulombMagnitude =
+			this.charge / (mag({ x: dx, y: dy }) * mag({ x: dx, y: dy }));
 		result.x *= k * coulombMagnitude;
 		result.y *= k * coulombMagnitude;
-
-		// divide the force vector by the charge of this particle to determine field
-		// this is from F=qE equation
-		result.x /= this.charge;
-		result.y /= this.charge;
 		return result;
 	}
 

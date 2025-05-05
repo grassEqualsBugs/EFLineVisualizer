@@ -4,8 +4,8 @@ class StationaryCharge {
 		this.radius = 10;
 		this.x = x - this.radius;
 		this.y = y - this.radius;
-		this.positiveColor = "blue";
-		this.negativeColor = "red";
+		this.positiveColor = "red";
+		this.negativeColor = "blue";
 		this.held = false;
 	}
 
@@ -36,7 +36,20 @@ class StationaryCharge {
 		context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
 		context.fill();
 		context.fillStyle = "white";
-		// context.fillRect(this.x, this.y, 2, 2);
+		context.fillRect(
+			this.x - this.radius / 2,
+			this.y - 1.5,
+			this.radius,
+			3,
+		);
+		if (this.charge > 0) {
+			context.fillRect(
+				this.x - 1.5,
+				this.y - this.radius / 2,
+				3,
+				this.radius,
+			);
+		}
 	}
 
 	collision(x, y) {

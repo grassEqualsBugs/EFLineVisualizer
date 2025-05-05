@@ -23,7 +23,7 @@ class TestCharge {
 		);
 		context.beginPath();
 		context.strokeStyle = `rgb(255, 0, 255)`;
-		context.lineWidth = 0.75;
+		context.lineWidth = lerp(0.4, 0.8, adjustedMagnitude / 20);
 		context.moveTo(
 			this.x - this.superposition.x / 2,
 			this.y - this.superposition.y / 2,

@@ -20,7 +20,7 @@ class TestCharge {
 		const adjustedMagnitude = clamp(
 			mag(this.superposition),
 			0,
-			this.spacing,
+			this.spacing + 5,
 		);
 		this.superposition = scalar(
 			norm(this.superposition),

@@ -4,46 +4,78 @@ let mouseDown = 0;
 let mousePos = { x: 0, y: 0 };
 let mousePathOn = 0;
 let mousePosPath = [];
-let pressedBefore = false;
+const fieldView = document.getElementById("fieldView");
+const fieldLines = new FieldLines();
 
-document.body.onmousedown = () => {
-	mouseDown++;
+function updateMousePos(e) {
+	const rect = canvas.getBoundingClientRect();
+	mousePos = {
+		x: (e.clientX - rect.left - canvas.clientLeft) * canvas.width / canvas.clientWidth,
+		y: (e.clientY - rect.top - canvas.clientTop) * canvas.height / canvas.clientHeight,
+	};
+}
+
+canvas.onmousedown = (e) => {
+	if (e.button != 0) return;
+	updateMousePos(e);
+	mouseDown = 1;
+	for (let i = charges.length - 1; i >= 0; i--) {
+		if (charges[i].collision(mousePos.x, mousePos.y)) {
+			charges[i].held = true;
+			break;
+		}
+	}
 };
-document.body.onmouseup = () => {
-	mouseDown--;
-};
-document.body.onmousemove = (e) => {
-	mousePos = { x: e.clientX, y: e.clientY };
-};
+window.addEventListener("mouseup", () => {
+	mouseDown = 0;
+});
+window.addEventListener("blur", () => {
+	mouseDown = 0;
+	mousePathOn = 0;
+});
+document.body.onmousemove = updateMousePos;
 
 let charges = [];
 let testCharges = [];
+let movingCharge = null;
+let lastTime = performance.now();
 const spacing = 20;
-for (let x = 0; x <= canvas.clientWidth; x += spacing) {
-	for (let y = 0; y <= canvas.clientHeight; y += spacing) {
+for (let x = 0; x <= canvas.width; x += spacing) {
+	for (let y = 0; y <= canvas.height; y += spacing) {
 		testCharges.push(new TestCharge(x, y, spacing));
 	}
 }
 
-function update() {
+function update(dt) {
 	for (let i = 0; i < charges.length; i++) {
 		if (mouseDown == 0) charges[i].held = false;
-		if (mouseDown == 1 && charges[i].collision(mousePos.x, mousePos.y))
-			charges[i].held = true;
 	}
 	for (let i = 0; i < charges.length; i++) {
 		if (charges[i].held) {
-			charges[i].x = mousePos.x - charges[i].radius;
-			charges[i].y = mousePos.y - charges[i].radius;
+			charges[i].x = mousePos.x;
+			charges[i].y = mousePos.y;
 		}
 	}
-	for (let i = 0; i < testCharges.length; i++)
-		testCharges[i].updateSuperposition(charges);
+	if (fieldView.value == "arrows") {
+		for (let i = 0; i < testCharges.length; i++)
+			testCharges[i].updateSuperposition(charges);
+	} else {
+		fieldLines.update(charges, canvas.width, canvas.height);
+	}
+	if (movingCharge) {
+		movingCharge.update(charges, dt);
+		if (movingCharge.despawned) movingCharge = null;
+	}
 }
 
 function draw() {
-	for (let i = 0; i < testCharges.length; i++) testCharges[i].draw(context);
+	if (fieldView.value == "arrows") {
+		for (let i = 0; i < testCharges.length; i++) testCharges[i].draw(context);
+	} else {
+		fieldLines.draw(context);
+	}
 	for (let i = 0; i < charges.length; i++) charges[i].draw(context);
+	if (movingCharge) movingCharge.draw(context);
 
 	// path integral
 	if (mousePosPath.length > 0) {
@@ -59,12 +91,29 @@ function draw() {
 	}
 }
 
+function reset() {
+	charges = [];
+	movingCharge = null;
+	mousePosPath = [];
+	mousePathOn = 0;
+}
+
+document.getElementById("reset").onclick = reset;
+
 window.addEventListener("keydown", (e) => {
+	if (e.target && ["SELECT", "INPUT", "BUTTON"].includes(e.target.tagName)) return;
+	if (e.repeat) return;
 	if (e.key == "p") {
 		charges.push(new StationaryCharge(mousePos.x, mousePos.y, 1));
 	} else if (e.key == "n") {
 		charges.push(new StationaryCharge(mousePos.x, mousePos.y, -1));
+	} else if (e.key == "t") {
+		movingCharge = new MovingCharge(mousePos.x, mousePos.y);
 	} else if (e.key == "e") {
+		if (movingCharge && movingCharge.collision(mousePos.x, mousePos.y)) {
+			movingCharge = null;
+			return;
+		}
 		for (let i = 0; i < charges.length; i++) {
 			if (charges[i].collision(mousePos.x, mousePos.y)) {
 				charges.splice(i, 1);
@@ -72,16 +121,17 @@ window.addEventListener("keydown", (e) => {
 			}
 		}
 	} else if (e.key == "r") {
-		charges = [];
-		mousePosPath = [];
+		reset();
 	} else if (e.key == "s") {
-		const newSpacing = Number(prompt("New spacing: "));
-		if (newSpacing < 5) {
+		const value = prompt("New arrow spacing (pixels): ");
+		if (value === null) return;
+		const newSpacing = Number(value);
+		if (!Number.isFinite(newSpacing) || newSpacing < 5) {
 			alert("Minimum spacing is 5");
 		} else {
 			testCharges = [];
-			for (let x = 0; x <= canvas.clientWidth; x += newSpacing) {
-				for (let y = 0; y <= canvas.clientHeight; y += newSpacing) {
+			for (let x = 0; x <= canvas.width; x += newSpacing) {
+				for (let y = 0; y <= canvas.height; y += newSpacing) {
 					testCharges.push(new TestCharge(x, y, newSpacing));
 				}
 			}
@@ -123,17 +173,19 @@ window.addEventListener("keyup", (e) => {
 
 function updateMousePath() {
 	if (mousePathOn == 1) {
-		mousePosPath.push({ x: mousePos.x - 10, y: mousePos.y - 10 });
+		mousePosPath.push({ x: mousePos.x, y: mousePos.y });
 		mousePosPath = resampleCurve(mousePosPath, 0.5);
 	}
 }
 
-(function step() {
-	update();
+(function step(time = performance.now()) {
+	const dt = clamp((time - lastTime) / 1000, 0, 0.05);
+	lastTime = time;
+	update(dt);
 	updateMousePath();
 
 	context.fillStyle = "white";
-	context.fillRect(0, 0, 1280, 720);
+	context.fillRect(0, 0, canvas.width, canvas.height);
 	draw();
 	document.getElementById("pathFieldStrength").innerHTML =
 		`Path integral strength: ${computePathIntegral().toFixed(3)}`;

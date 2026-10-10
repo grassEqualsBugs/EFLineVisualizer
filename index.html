@@ -1,32 +1,84 @@
 <!doctype html>
-<html>
+<html lang="en">
 	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>EF Line Visualizer</title>
 		<style>
-			@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
 			body {
-				font-size: 20px;
-				font-family: Roboto;
-				background-color: gray;
+				margin: 0;
+				padding: 32px 20px;
+				font: 14px/1.5 system-ui, sans-serif;
+				color: #252525;
+				background-color: #ededed;
 			}
+			main { max-width: 784px; margin: auto; }
+			h1 { margin: 0; font-size: 24px; font-weight: 600; }
+			header p { margin: 4px 0 20px; color: #666; }
+			.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+			select, button {
+				font: inherit;
+				color: inherit;
+				background: white;
+				border: 1px solid #ccc;
+				border-radius: 5px;
+				padding: 6px 10px;
+			}
+			button { margin-left: auto; cursor: pointer; }
+			button:hover { background: #f7f7f7; }
 			canvas {
-				border: 2px solid black;
+				display: block;
+				width: 100%;
+				height: auto;
+				box-sizing: border-box;
+				border: 1px solid #bbb;
+				border-radius: 6px;
+				background: white;
+			}
+			#pathFieldStrength { color: #666; font-size: 13px; font-variant-numeric: tabular-nums; }
+			.controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; margin-top: 20px; }
+			.controls p { margin: 0; }
+			kbd { display: inline-block; min-width: 18px; padding: 1px 5px; margin-right: 5px; border: 1px solid #ccc; border-radius: 4px; background: #fafafa; text-align: center; font: inherit; font-size: 12px; }
+			.note { margin-top: 20px; color: #666; font-size: 13px; }
+			@media (max-width: 540px) {
+				body { padding: 20px 12px; }
+				.controls { grid-template-columns: 1fr; gap: 8px; }
 			}
 		</style>
 	</head>
 	<body>
-		<canvas id="canv" width="780" height="438"></canvas>
-		<p id="pathFieldStrength">Path integral strength: N/A</p>
-		<p>P -> Spawn stationary positively charged particle</p>
-		<p>N -> Spawn stationary negatively charged particle</p>
-		<p>E (while hovering over particle) -> Despawn particle</p>
-		<p>Hold down left click (while on particle) -> Move particle</p>
-		<p>R -> Restart</p>
-		<p>S -> Change spacing of test charges in space (default is 20px)</p>
-		<p>While holding I -> Integrate mouse path field strength</p>
+		<main>
+			<header>
+				<h1>Electric Field Visualizer</h1>
+				<p>Place charges. Explore the field.</p>
+			</header>
+			<div class="toolbar">
+				<label for="fieldView">Show</label>
+				<select id="fieldView">
+					<option value="lines">Field lines</option>
+					<option value="arrows">Vector arrows</option>
+				</select>
+				<button id="reset" type="button">Reset</button>
+			</div>
+			<canvas id="canv" width="780" height="438" aria-label="Electric field canvas. Hover and press P or N to place source charges, or T to release a positive test charge."></canvas>
+			<p id="pathFieldStrength">Path integral strength: 0.000</p>
+			<div class="controls">
+				<p><kbd>P</kbd> Positive source charge</p>
+				<p><kbd>N</kbd> Negative source charge</p>
+				<p><kbd>T</kbd> Place or reset test charge</p>
+				<p><kbd>E</kbd> Remove charge under cursor</p>
+				<p><kbd>Drag</kbd> Move a source charge</p>
+				<p><kbd>R</kbd> Reset everything</p>
+				<p><kbd>S</kbd> Change vector arrow spacing</p>
+				<p><kbd>Hold I</kbd> Integrate along cursor path</p>
+			</div>
+			<p class="note">Use shortcuts with your cursor over the canvas. The black test charge is positive and disappears on contact with a source charge.</p>
+		</main>
 		<script src="utils.js"></script>
 		<script src="TestCharge.js"></script>
 		<script src="StationaryCharge.js"></script>
+		<script src="MovingCharge.js"></script>
+		<script src="FieldLines.js"></script>
 		<script src="main.js"></script>
 	</body>
 </html>

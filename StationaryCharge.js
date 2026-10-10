@@ -2,8 +2,8 @@ class StationaryCharge {
 	constructor(x, y, charge) {
 		this.charge = charge;
 		this.radius = 10;
-		this.x = x - this.radius;
-		this.y = y - this.radius;
+		this.x = x;
+		this.y = y;
 		this.positiveColor = "red";
 		this.negativeColor = "blue";
 		this.held = false;
@@ -11,8 +11,8 @@ class StationaryCharge {
 
 	// assuming electrically charged test points in the plane
 	getElectricFieldAt(x, y) {
-		const dx = this.x - x;
-		const dy = this.y - y;
+		const dx = x - this.x;
+		const dy = y - this.y;
 		let result = {
 			x: dx,
 			y: dy,
@@ -23,7 +23,7 @@ class StationaryCharge {
 		// determine the force vector based off of Coulomb's Law
 		let k = 200000;
 		const coulombMagnitude =
-			this.charge / (mag({ x: dx, y: dy }) * mag({ x: dx, y: dy }));
+			this.charge / Math.max(dx * dx + dy * dy, this.radius * this.radius);
 		result.x *= k * coulombMagnitude;
 		result.y *= k * coulombMagnitude;
 		return result;
@@ -53,8 +53,8 @@ class StationaryCharge {
 	}
 
 	collision(x, y) {
-		const dx = x - this.radius - this.x;
-		const dy = y - this.radius - this.y;
+		const dx = x - this.x;
+		const dy = y - this.y;
 		return Math.sqrt(dx * dx + dy * dy) <= this.radius;
 	}
 }

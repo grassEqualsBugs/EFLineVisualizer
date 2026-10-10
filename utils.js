@@ -3,6 +3,7 @@ function mag(v) {
 }
 
 function norm(v) {
+	if (mag(v) == 0) return { x: 0, y: 0 };
 	return { x: v.x / mag(v), y: v.y / mag(v) };
 }
 

@@ -17,7 +17,6 @@ const fieldLines = new FieldLines();
 const expandedView = document.getElementById("expandedView");
 const pathFieldStrength = document.getElementById("pathFieldStrength");
 const pathIntegralValue = document.getElementById("pathIntegralValue");
-const pathIntegralSymbol = document.getElementById("pathIntegralSymbol");
 let backdropPressed = false;
 
 document.getElementById("expand").onclick = () => {
@@ -171,12 +170,15 @@ function draw() {
 			context.lineTo(mousePosPath[i].x, mousePosPath[i].y);
 		}
 		context.stroke();
-		if (mousePathOn == 1) {
-			context.fillStyle = "gray";
-			context.beginPath();
-			context.arc(mousePosPath[0].x, mousePosPath[0].y, 3, 0, Math.PI * 2);
-			context.fill();
+		context.fillStyle = "gray";
+		context.beginPath();
+		context.arc(mousePosPath[0].x, mousePosPath[0].y, 3, 0, Math.PI * 2);
+		if (!pathClosed && mousePosPath.length > 1) {
+			const last = mousePosPath[mousePosPath.length - 1];
+			context.moveTo(last.x + 3, last.y);
+			context.arc(last.x, last.y, 3, 0, Math.PI * 2);
 		}
+		context.fill();
 	}
 }
 
@@ -290,7 +292,6 @@ function updateMousePath() {
 	context.fillStyle = "white";
 	context.fillRect(0, 0, canvasWidth, canvasHeight);
 	draw();
-	pathIntegralSymbol.textContent = pathClosed ? "∮" : "∫";
 	const value = computePathIntegral();
 	pathIntegralValue.textContent = (Math.abs(value) < 0.0005 ? 0 : value).toFixed(3);
 	window.requestAnimationFrame(step);

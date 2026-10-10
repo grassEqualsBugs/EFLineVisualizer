@@ -84,7 +84,6 @@
 			#collapse { position: absolute; top: 16px; right: 16px; z-index: 1; }
 			#canvasHome { aspect-ratio: 780 / 438; }
 			#expandedContent { min-height: 0; }
-			#pathFieldStrength math { font-size: 19px; vertical-align: middle; }
 			dialog #pathFieldStrength { margin: 8px 0 0; flex-shrink: 0; }
 			.expanded-copyright { margin: 12px 0 0; color: #666; font-size: 12px; text-align: center; flex-shrink: 0; }
 			canvas:focus { outline: none; }
@@ -141,7 +140,7 @@
 					<div id="canvasHome">
 						<canvas id="canv" tabindex="0" width="780" height="438" aria-label="Electric field canvas. Hover and press P or N to place source charges, or T to release a positive test charge."></canvas>
 					</div>
-					<p id="pathFieldStrength">Path integral value = <math aria-label="integral of E dot d l"><mrow><mo id="pathIntegralSymbol">∫</mo><mover><mi>E</mi><mo>→</mo></mover><mo>·</mo><mi mathvariant="normal">d</mi><mover><mi>ℓ</mi><mo>→</mo></mover></mrow></math> = <span id="pathIntegralValue">0.000</span></p>
+					<p id="pathFieldStrength">Path integral value: <span id="pathIntegralValue">0.000</span></p>
 					<div class="controls">
 						<p><kbd>P</kbd> Place positive source charge at cursor</p>
 						<p><kbd>N</kbd> Place negative source charge at cursor</p>

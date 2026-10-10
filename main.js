@@ -9,9 +9,11 @@ const fieldLines = new FieldLines();
 
 function updateMousePos(e) {
 	const rect = canvas.getBoundingClientRect();
+	const scaleX = rect.width / canvas.offsetWidth;
+	const scaleY = rect.height / canvas.offsetHeight;
 	mousePos = {
-		x: (e.clientX - rect.left - canvas.clientLeft) * canvas.width / canvas.clientWidth,
-		y: (e.clientY - rect.top - canvas.clientTop) * canvas.height / canvas.clientHeight,
+		x: ((e.clientX - rect.left) / scaleX - canvas.clientLeft) * canvas.width / canvas.clientWidth,
+		y: ((e.clientY - rect.top) / scaleY - canvas.clientTop) * canvas.height / canvas.clientHeight,
 	};
 }
 

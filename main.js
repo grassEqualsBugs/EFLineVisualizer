@@ -1,5 +1,7 @@
 const canvas = document.getElementById("canv");
 const context = canvas.getContext("2d");
+const canvasWidth = canvas.width;
+const canvasHeight = canvas.height;
 let mouseDown = 0;
 let mousePos = { x: 0, y: 0 };
 let mousePathOn = 0;
@@ -7,13 +9,38 @@ let mousePosPath = [];
 const fieldView = document.getElementById("fieldView");
 const fieldLines = new FieldLines();
 
+fieldView.onchange = () => {
+	document.getElementById("fieldSettings").hidden = fieldView.value != "lines";
+};
+document.getElementById("lineCount").oninput = (e) => {
+	fieldLines.linesPerCharge = Number(e.target.value);
+	document.getElementById("lineCountValue").textContent = e.target.value;
+};
+document.getElementById("arrowDensity").onchange = (e) => {
+	fieldLines.arrowSpacing = Number(e.target.value);
+};
+
+
+function resizeCanvas() {
+	const rect = canvas.getBoundingClientRect();
+	const pixelRatio = window.devicePixelRatio || 1;
+	const width = Math.max(1, Math.round(canvas.clientWidth * rect.width / canvas.offsetWidth * pixelRatio));
+	const height = Math.max(1, Math.round(canvas.clientHeight * rect.height / canvas.offsetHeight * pixelRatio));
+	if (canvas.width == width && canvas.height == height) return;
+
+	// Match screen pixels while keeping the simulation in its original coordinates.
+	canvas.width = width;
+	canvas.height = height;
+	context.setTransform(width / canvasWidth, 0, 0, height / canvasHeight, 0, 0);
+}
+
 function updateMousePos(e) {
 	const rect = canvas.getBoundingClientRect();
 	const scaleX = rect.width / canvas.offsetWidth;
 	const scaleY = rect.height / canvas.offsetHeight;
 	mousePos = {
-		x: ((e.clientX - rect.left) / scaleX - canvas.clientLeft) * canvas.width / canvas.clientWidth,
-		y: ((e.clientY - rect.top) / scaleY - canvas.clientTop) * canvas.height / canvas.clientHeight,
+		x: ((e.clientX - rect.left) / scaleX - canvas.clientLeft) * canvasWidth / canvas.clientWidth,
+		y: ((e.clientY - rect.top) / scaleY - canvas.clientTop) * canvasHeight / canvas.clientHeight,
 	};
 }
 
@@ -42,8 +69,8 @@ let testCharges = [];
 let movingCharge = null;
 let lastTime = performance.now();
 const spacing = 20;
-for (let x = 0; x <= canvas.width; x += spacing) {
-	for (let y = 0; y <= canvas.height; y += spacing) {
+for (let x = 0; x <= canvasWidth; x += spacing) {
+	for (let y = 0; y <= canvasHeight; y += spacing) {
 		testCharges.push(new TestCharge(x, y, spacing));
 	}
 }
@@ -62,7 +89,7 @@ function update(dt) {
 		for (let i = 0; i < testCharges.length; i++)
 			testCharges[i].updateSuperposition(charges);
 	} else {
-		fieldLines.update(charges, canvas.width, canvas.height);
+		fieldLines.update(charges, canvasWidth, canvasHeight);
 	}
 	if (movingCharge) {
 		movingCharge.update(charges, dt);
@@ -124,20 +151,6 @@ window.addEventListener("keydown", (e) => {
 		}
 	} else if (e.key == "r") {
 		reset();
-	} else if (e.key == "s") {
-		const value = prompt("New arrow spacing (pixels): ");
-		if (value === null) return;
-		const newSpacing = Number(value);
-		if (!Number.isFinite(newSpacing) || newSpacing < 5) {
-			alert("Minimum spacing is 5");
-		} else {
-			testCharges = [];
-			for (let x = 0; x <= canvas.width; x += newSpacing) {
-				for (let y = 0; y <= canvas.height; y += newSpacing) {
-					testCharges.push(new TestCharge(x, y, newSpacing));
-				}
-			}
-		}
 	} else if (e.key == "i") {
 		if (mousePathOn == 0) {
 			mousePosPath = [];
@@ -181,13 +194,14 @@ function updateMousePath() {
 }
 
 (function step(time = performance.now()) {
+	resizeCanvas();
 	const dt = clamp((time - lastTime) / 1000, 0, 0.05);
 	lastTime = time;
 	update(dt);
 	updateMousePath();
 
 	context.fillStyle = "white";
-	context.fillRect(0, 0, canvas.width, canvas.height);
+	context.fillRect(0, 0, canvasWidth, canvasHeight);
 	draw();
 	document.getElementById("pathFieldStrength").innerHTML =
 		`Path integral strength: ${computePathIntegral().toFixed(3)}`;

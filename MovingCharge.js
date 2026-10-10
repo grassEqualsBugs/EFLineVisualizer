@@ -2,6 +2,7 @@ class MovingCharge extends StationaryCharge {
 	constructor(x, y) {
 		super(x, y, 1);
 		this.radius = 6;
+		this.mass = 0.5;
 		this.positiveColor = "black";
 		this.velocity = { x: 0, y: 0 };
 		this.despawned = false;
@@ -12,12 +13,12 @@ class MovingCharge extends StationaryCharge {
 		const steps = Math.ceil(dt / (1 / 240));
 		for (let i = 0; i < steps && !this.despawned; i++) {
 			const acceleration = { x: 0, y: 0 };
+			// a = qE / m; half the mass gives twice the acceleration.
 			charges.forEach((charge) => {
 				const field = charge.getElectricFieldAt(this.x, this.y);
-				acceleration.x += field.x;
-				acceleration.y += field.y;
+				acceleration.x += field.x * this.charge / this.mass;
+				acceleration.y += field.y * this.charge / this.mass;
 			});
-			// F = qE, with unit charge and mass in the visualizer's units.
 			this.velocity.x += acceleration.x * dt / steps;
 			this.velocity.y += acceleration.y * dt / steps;
 			const dx = this.velocity.x * dt / steps;

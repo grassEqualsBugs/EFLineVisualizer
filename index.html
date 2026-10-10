@@ -27,10 +27,16 @@
 			}
 			button { margin-left: auto; cursor: pointer; }
 			button:hover { background: #f7f7f7; }
+			.field-settings { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; margin-bottom: 12px; }
+			.field-settings[hidden] { display: none; }
+			.field-settings label { display: flex; align-items: center; gap: 8px; }
+			input[type="range"] { width: 100px; accent-color: #555; }
+			output { min-width: 2ch; font-variant-numeric: tabular-nums; }
 			canvas {
 				display: block;
 				width: 100%;
 				height: auto;
+				aspect-ratio: 780 / 438;
 				box-sizing: border-box;
 				border: 1px solid #bbb;
 				border-radius: 6px;
@@ -60,6 +66,19 @@
 				</select>
 				<button id="reset" type="button">Reset</button>
 			</div>
+			<div id="fieldSettings" class="field-settings">
+				<label for="lineCount">Lines per charge
+					<input id="lineCount" type="range" min="8" max="48" step="4" value="20" />
+					<output id="lineCountValue" for="lineCount">20</output>
+				</label>
+				<label for="arrowDensity">Arrow density
+					<select id="arrowDensity">
+						<option value="180">Low</option>
+						<option value="120" selected>Normal</option>
+						<option value="60">High</option>
+					</select>
+				</label>
+			</div>
 			<canvas id="canv" width="780" height="438" aria-label="Electric field canvas. Hover and press P or N to place source charges, or T to release a positive test charge."></canvas>
 			<p id="pathFieldStrength">Path integral strength: 0.000</p>
 			<div class="controls">
@@ -69,7 +88,6 @@
 				<p><kbd>E</kbd> Remove charge under cursor</p>
 				<p><kbd>Drag</kbd> Move a source charge</p>
 				<p><kbd>R</kbd> Reset everything</p>
-				<p><kbd>S</kbd> Change vector arrow spacing</p>
 				<p><kbd>Hold I</kbd> Integrate along cursor path</p>
 			</div>
 			<p class="note">Use shortcuts with your cursor over the canvas. The black test charge is positive and disappears on contact with a source charge.</p>

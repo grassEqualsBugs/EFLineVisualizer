@@ -1,6 +1,8 @@
 class FieldLines {
 	constructor() {
 		this.lines = [];
+		this.linesPerCharge = 20;
+		this.arrowSpacing = 120;
 		this.previousState = "";
 	}
 
@@ -47,7 +49,7 @@ class FieldLines {
 		if (length < 60) return [];
 
 		// Center evenly spaced arrows along each curve, away from its ends.
-		const count = Math.max(1, Math.floor(length / 120));
+		const count = Math.max(1, Math.floor(length / this.arrowSpacing));
 		const spacing = length / count;
 		const arrows = [];
 		let distance = 0;
@@ -71,14 +73,14 @@ class FieldLines {
 	}
 
 	update(charges, width, height) {
-		const state = JSON.stringify([width, height, charges.map((charge) => [charge.x, charge.y, charge.charge])]);
+		const state = JSON.stringify([width, height, this.linesPerCharge, this.arrowSpacing, charges.map((charge) => [charge.x, charge.y, charge.charge])]);
 		if (state == this.previousState) return;
 		this.previousState = state;
 		this.lines = [];
 		charges.forEach((charge) => {
 			const direction = charge.charge > 0 ? 1 : -1;
-			for (let i = 0; i < 20; i++) {
-				const angle = i * Math.PI * 2 / 20;
+			for (let i = 0; i < this.linesPerCharge; i++) {
+				const angle = i * Math.PI * 2 / this.linesPerCharge;
 				const line = this.trace(
 					charge.x + Math.cos(angle) * (charge.radius + 1),
 					charge.y + Math.sin(angle) * (charge.radius + 1),

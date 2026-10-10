@@ -6,16 +6,30 @@
 		<title>EF Line Visualizer</title>
 		<style>
 			body {
-				zoom: 1.1;
+				--interface-zoom: 1.1;
+				zoom: var(--interface-zoom);
 				margin: 0;
-				padding: 32px 20px;
+				padding: 32px 20px 64px;
 				font: 14px/1.5 system-ui, sans-serif;
 				color: #252525;
 				background-color: #ededed;
 			}
 			main { max-width: 784px; margin: auto; }
 			h1 { margin: 0; font-size: 24px; font-weight: 600; }
-			header { margin-bottom: 20px; }
+			header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+			header p { margin: 4px 0 0; color: #666; }
+			footer {
+				position: fixed;
+				bottom: 0;
+				left: 0;
+				right: 0;
+				z-index: 1;
+				padding: 8px 12px;
+				background: #ededed;
+				color: #666;
+				font-size: 12px;
+				text-align: center;
+			}
 			.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 			select, button {
 				font: inherit;
@@ -46,9 +60,31 @@
 			.controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; margin-top: 20px; }
 			.controls p { margin: 0; }
 			kbd { display: inline-block; min-width: 18px; padding: 1px 5px; margin-right: 5px; border: 1px solid #ccc; border-radius: 4px; background: #fafafa; text-align: center; font: inherit; font-size: 12px; }
-			.note { margin-top: 20px; color: #666; font-size: 13px; }
+			.icon-button { display: inline-flex; align-items: center; justify-content: center; padding: 8px; }
+			.icon-button svg { width: 18px; height: 18px; }
+			body.expanded { overflow: hidden; }
+			dialog {
+				width: min(1200px, calc((100dvh - 128px) / var(--interface-zoom) * 780 / 438));
+				max-width: calc(100% - 48px);
+				max-height: calc(100% - 64px);
+				box-sizing: border-box;
+				padding: 8px;
+				border: 1px solid #aaa;
+				border-radius: 8px;
+				background: #ededed;
+				color: inherit;
+				box-shadow: 0 12px 40px #0003;
+			}
+			dialog[open] { display: flex; flex-direction: column; }
+			dialog::backdrop { background: #0008; }
+			#collapse { position: absolute; top: 16px; right: 16px; z-index: 1; }
+			#canvasHome { aspect-ratio: 780 / 438; }
+			#expandedContent { min-height: 0; }
+			dialog #pathFieldStrength { margin: 8px 0 0; flex-shrink: 0; }
+			.expanded-copyright { margin: 12px 0 0; color: #666; font-size: 12px; text-align: center; flex-shrink: 0; }
+			canvas:focus { outline: none; }
 			@media (max-width: 540px) {
-				body { padding: 20px 12px; }
+				body { padding: 20px 12px 64px; }
 				.controls { grid-template-columns: 1fr; gap: 8px; }
 			}
 		</style>
@@ -56,42 +92,65 @@
 	<body>
 		<main>
 			<header>
-				<h1>Electric Field Visualizer</h1>
+				<div>
+					<h1>Electric Field Visualizer</h1>
+					<p>Created by Ethan Printz</p>
+				</div>
+				<button id="expand" class="icon-button" type="button" aria-label="Expand visualizer" title="Expand visualizer" aria-haspopup="dialog">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+						<path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" />
+					</svg>
+				</button>
 			</header>
-			<div class="toolbar">
-				<label for="fieldView">Show</label>
-				<select id="fieldView">
-					<option value="lines">Field lines</option>
-					<option value="arrows">Vector arrows</option>
-				</select>
-				<button id="reset" type="button">Reset</button>
+			<div id="visualizerHome">
+				<section id="visualizer" aria-label="Field simulation">
+					<div class="toolbar">
+						<label for="fieldView">Show</label>
+						<select id="fieldView">
+							<option value="lines">Field lines</option>
+							<option value="arrows">Vector arrows</option>
+						</select>
+						<button id="reset" type="button">Reset</button>
+					</div>
+					<div id="fieldSettings" class="field-settings">
+						<label for="lineCount">Lines per charge
+							<input id="lineCount" type="range" min="8" max="48" step="4" value="20" />
+							<output id="lineCountValue" for="lineCount">20</output>
+						</label>
+						<label for="arrowDensity">Arrow density
+							<select id="arrowDensity">
+								<option value="180">Low</option>
+								<option value="120" selected>Normal</option>
+								<option value="60">High</option>
+							</select>
+						</label>
+					</div>
+					<div id="canvasHome">
+						<canvas id="canv" tabindex="0" width="780" height="438" aria-label="Electric field canvas. Hover and press P or N to place source charges, or T to release a positive test charge."></canvas>
+					</div>
+					<p id="pathFieldStrength">Path integral strength: 0.000</p>
+					<div class="controls">
+						<p><kbd>P</kbd> Place positive source charge at cursor</p>
+						<p><kbd>N</kbd> Place negative source charge at cursor</p>
+						<p><kbd>T</kbd> Place positive test charge at cursor</p>
+						<p><kbd>E</kbd> Remove charge at cursor</p>
+						<p><kbd>Drag</kbd> Move a source charge</p>
+						<p><kbd>R</kbd> Reset everything</p>
+						<p><kbd>Hold I</kbd> Integrate along cursor path</p>
+					</div>
+				</section>
 			</div>
-			<div id="fieldSettings" class="field-settings">
-				<label for="lineCount">Lines per charge
-					<input id="lineCount" type="range" min="8" max="48" step="4" value="20" />
-					<output id="lineCountValue" for="lineCount">20</output>
-				</label>
-				<label for="arrowDensity">Arrow density
-					<select id="arrowDensity">
-						<option value="180">Low</option>
-						<option value="120" selected>Normal</option>
-						<option value="60">High</option>
-					</select>
-				</label>
-			</div>
-			<canvas id="canv" width="780" height="438" aria-label="Electric field canvas. Hover and press P or N to place source charges, or T to release a positive test charge."></canvas>
-			<p id="pathFieldStrength">Path integral strength: 0.000</p>
-			<div class="controls">
-				<p><kbd>P</kbd> Positive source charge</p>
-				<p><kbd>N</kbd> Negative source charge</p>
-				<p><kbd>T</kbd> Place or reset test charge</p>
-				<p><kbd>E</kbd> Remove charge under cursor</p>
-				<p><kbd>Drag</kbd> Move a source charge</p>
-				<p><kbd>R</kbd> Reset everything</p>
-				<p><kbd>Hold I</kbd> Integrate along cursor path</p>
-			</div>
-			<p class="note">Use shortcuts with your cursor over the canvas. The black test charge is positive and disappears on contact with a source charge.</p>
 		</main>
+		<dialog id="expandedView" aria-label="Expanded electric field display">
+			<button id="collapse" class="icon-button" type="button" aria-label="Exit expanded view" title="Exit expanded view">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+					<path d="M3 8h5V3m8 0v5h5M8 21v-5H3m18 0h-5v5" />
+				</svg>
+			</button>
+			<div id="expandedContent"></div>
+			<p class="expanded-copyright">&copy; 2026 Ethan Printz</p>
+		</dialog>
+		<footer>&copy; 2026 Ethan Printz</footer>
 		<script src="utils.js"></script>
 		<script src="TestCharge.js"></script>
 		<script src="StationaryCharge.js"></script>

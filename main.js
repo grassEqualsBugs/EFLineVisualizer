@@ -3,11 +3,46 @@ const context = canvas.getContext("2d");
 const canvasWidth = canvas.width;
 const canvasHeight = canvas.height;
 let mouseDown = 0;
+let mouseOverCanvas = false;
 let mousePos = { x: 0, y: 0 };
 let mousePathOn = 0;
 let mousePosPath = [];
 const fieldView = document.getElementById("fieldView");
 const fieldLines = new FieldLines();
+
+const expandedView = document.getElementById("expandedView");
+const pathFieldStrength = document.getElementById("pathFieldStrength");
+let backdropPressed = false;
+
+document.getElementById("expand").onclick = () => {
+	stopCanvasInteraction();
+	document.getElementById("expandedContent").append(canvas);
+	document.getElementById("expandedContent").after(pathFieldStrength);
+	document.body.classList.add("expanded");
+	expandedView.showModal();
+	canvas.focus({ preventScroll: true });
+	resizeCanvas();
+};
+document.getElementById("collapse").onclick = () => expandedView.close();
+expandedView.addEventListener("close", () => {
+	stopCanvasInteraction();
+	document.getElementById("canvasHome").append(canvas);
+	document.getElementById("canvasHome").after(pathFieldStrength);
+	document.body.classList.remove("expanded");
+	resizeCanvas();
+});
+function outsideExpandedView(e) {
+	const rect = expandedView.getBoundingClientRect();
+	return e.target == expandedView && (e.clientX < rect.left || e.clientX > rect.right ||
+		e.clientY < rect.top || e.clientY > rect.bottom);
+}
+expandedView.onmousedown = (e) => {
+	backdropPressed = outsideExpandedView(e);
+};
+expandedView.onclick = (e) => {
+	if (backdropPressed && outsideExpandedView(e)) expandedView.close();
+	backdropPressed = false;
+};
 
 fieldView.onchange = () => {
 	document.getElementById("fieldSettings").hidden = fieldView.value != "lines";
@@ -42,11 +77,28 @@ function updateMousePos(e) {
 		x: ((e.clientX - rect.left) / scaleX - canvas.clientLeft) * canvasWidth / canvas.clientWidth,
 		y: ((e.clientY - rect.top) / scaleY - canvas.clientTop) * canvasHeight / canvas.clientHeight,
 	};
+	mouseOverCanvas = mousePos.x >= 0 && mousePos.x <= canvasWidth &&
+		mousePos.y >= 0 && mousePos.y <= canvasHeight;
+	if (!mouseOverCanvas) stopCanvasInteraction();
 }
 
+function stopCanvasInteraction() {
+	mouseOverCanvas = false;
+	mouseDown = 0;
+	mousePathOn = 0;
+	for (let i = 0; i < charges.length; i++) charges[i].held = false;
+}
+
+canvas.onmouseenter = (e) => {
+	updateMousePos(e);
+	canvas.focus({ preventScroll: true });
+};
+canvas.onmousemove = updateMousePos;
+canvas.onmouseleave = stopCanvasInteraction;
 canvas.onmousedown = (e) => {
 	if (e.button != 0) return;
 	updateMousePos(e);
+	if (!mouseOverCanvas) return;
 	mouseDown = 1;
 	for (let i = charges.length - 1; i >= 0; i--) {
 		if (charges[i].collision(mousePos.x, mousePos.y)) {
@@ -58,15 +110,11 @@ canvas.onmousedown = (e) => {
 window.addEventListener("mouseup", () => {
 	mouseDown = 0;
 });
-window.addEventListener("blur", () => {
-	mouseDown = 0;
-	mousePathOn = 0;
-});
-document.body.onmousemove = updateMousePos;
+window.addEventListener("blur", stopCanvasInteraction);
 
 let charges = [];
 let testCharges = [];
-let movingCharge = null;
+let movingCharges = [];
 let lastTime = performance.now();
 const spacing = 20;
 for (let x = 0; x <= canvasWidth; x += spacing) {
@@ -91,9 +139,9 @@ function update(dt) {
 	} else {
 		fieldLines.update(charges, canvasWidth, canvasHeight);
 	}
-	if (movingCharge) {
-		movingCharge.update(charges, dt);
-		if (movingCharge.despawned) movingCharge = null;
+	for (let i = movingCharges.length - 1; i >= 0; i--) {
+		movingCharges[i].update(charges, dt);
+		if (movingCharges[i].despawned) movingCharges.splice(i, 1);
 	}
 }
 
@@ -104,7 +152,7 @@ function draw() {
 		fieldLines.draw(context);
 	}
 	for (let i = 0; i < charges.length; i++) charges[i].draw(context);
-	if (movingCharge) movingCharge.draw(context);
+	for (let i = 0; i < movingCharges.length; i++) movingCharges[i].draw(context);
 
 	// path integral
 	if (mousePosPath.length > 0) {
@@ -122,7 +170,7 @@ function draw() {
 
 function reset() {
 	charges = [];
-	movingCharge = null;
+	movingCharges = [];
 	mousePosPath = [];
 	mousePathOn = 0;
 }
@@ -130,6 +178,7 @@ function reset() {
 document.getElementById("reset").onclick = reset;
 
 window.addEventListener("keydown", (e) => {
+	if (!mouseOverCanvas) return;
 	if (e.target && ["SELECT", "INPUT", "BUTTON"].includes(e.target.tagName)) return;
 	if (e.repeat) return;
 	if (e.key == "p") {
@@ -137,11 +186,13 @@ window.addEventListener("keydown", (e) => {
 	} else if (e.key == "n") {
 		charges.push(new StationaryCharge(mousePos.x, mousePos.y, -1));
 	} else if (e.key == "t") {
-		movingCharge = new MovingCharge(mousePos.x, mousePos.y);
+		movingCharges.push(new MovingCharge(mousePos.x, mousePos.y));
 	} else if (e.key == "e") {
-		if (movingCharge && movingCharge.collision(mousePos.x, mousePos.y)) {
-			movingCharge = null;
-			return;
+		for (let i = movingCharges.length - 1; i >= 0; i--) {
+			if (movingCharges[i].collision(mousePos.x, mousePos.y)) {
+				movingCharges.splice(i, 1);
+				return;
+			}
 		}
 		for (let i = 0; i < charges.length; i++) {
 			if (charges[i].collision(mousePos.x, mousePos.y)) {
@@ -187,7 +238,7 @@ window.addEventListener("keyup", (e) => {
 });
 
 function updateMousePath() {
-	if (mousePathOn == 1) {
+	if (mousePathOn == 1 && mouseOverCanvas) {
 		mousePosPath.push({ x: mousePos.x, y: mousePos.y });
 		mousePosPath = resampleCurve(mousePosPath, 0.5);
 	}
@@ -203,7 +254,7 @@ function updateMousePath() {
 	context.fillStyle = "white";
 	context.fillRect(0, 0, canvasWidth, canvasHeight);
 	draw();
-	document.getElementById("pathFieldStrength").innerHTML =
+	pathFieldStrength.textContent =
 		`Path integral strength: ${computePathIntegral().toFixed(3)}`;
 	window.requestAnimationFrame(step);
 })();

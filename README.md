@@ -1,4 +1,4 @@
-# Electric Field Visualizer
+# [Electric Field Visualizer](https://grassequalsbugs.github.io/EFLineVisualizer/)
 
 An interactive electric-field visualizer built with plain HTML, CSS, and JavaScript. Place source charges on the canvas to see their combined field. Field lines are shown by default; the Show menu can switch to vector arrows. The line settings control the number of lines per charge and the spacing of arrows along those lines.
 

@@ -37,7 +37,7 @@ class FieldLines {
 					y: y + middle.y * direction * step,
 				};
 				const last = this.getDirection(next.x, next.y, charges);
-				// Refine sharp turns and stop instead of stepping across a field null.
+				// smaller steps near sharp turns and field nulls
 				if (first.x * middle.x + first.y * middle.y > 0.995 &&
 					middle.x * last.x + middle.y * last.y > 0.995) break;
 				step /= 2;
@@ -62,7 +62,7 @@ class FieldLines {
 			length += mag({ x: points[i].x - points[i - 1].x, y: points[i].y - points[i - 1].y });
 		if (length < 60) return [];
 
-		// Center evenly spaced arrows along each curve, away from its ends.
+		// space arrows along the curve
 		const count = Math.max(1, Math.floor(length / this.arrowSpacing));
 		const spacing = length / count;
 		const arrows = [];
@@ -94,15 +94,15 @@ class FieldLines {
 		charges.forEach((charge) => {
 			const direction = charge.charge > 0 ? 1 : -1;
 			for (let i = 0; i < this.linesPerCharge; i++) {
-				// Offset seeds so symmetric pairs do not start directly toward the field null.
+				// offset the starting angles
 				const angle = (i + 0.5) * Math.PI * 2 / this.linesPerCharge;
 				const line = this.trace(
 					charge.x + Math.cos(angle) * (charge.radius + 1),
 					charge.y + Math.sin(angle) * (charge.radius + 1),
 					direction, charges, width, height,
 				);
-				// Positive seeds already cover connections between charges.
-				// Negative seeds add lines arriving from outside the canvas.
+				// positive charges cover the connections
+				// negative charges add lines from outside
 				if (direction == 1 || !line.endedOnCharge)
 					this.lines.push({
 						points: line.points,
@@ -134,7 +134,7 @@ class FieldLines {
 			}
 			return { line, curvature };
 		});
-		// Keep smoother complete curves when traces nearly overlap for a long stretch.
+		// skip curves that nearly overlap
 		candidates.sort((a, b) => a.curvature - b.curvature);
 		candidates.forEach(({ line, curvature }) => {
 			const samples = [];

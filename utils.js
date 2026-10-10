@@ -30,7 +30,7 @@ function resampleCurve(points, spacing, includeFirst = true) {
 		return includeFirst && points.length === 1 ? [points[0]] : [];
 	}
 
-	// Compute lengths of each segment
+	// segment lengths
 	const segLengths = [];
 	for (let i = 0; i < points.length - 1; i++) {
 		const dx = points[i + 1].x - points[i].x;
@@ -40,7 +40,7 @@ function resampleCurve(points, spacing, includeFirst = true) {
 
 	const totalLength = segLengths.reduce((sum, L) => sum + L, 0);
 	if (totalLength < spacing) {
-		// Curve shorter than one spacing; return just the start (or empty)
+		// curve is shorter than the spacing
 		return includeFirst ? [points[0]] : [];
 	}
 
@@ -51,11 +51,11 @@ function resampleCurve(points, spacing, includeFirst = true) {
 	let nextDistance = spacing;
 	let segIndex = 0;
 
-	// Walk along segments, placing samples
+	// place samples along the curve
 	while (segIndex < segLengths.length && nextDistance <= totalLength) {
 		const L = segLengths[segIndex];
 		if (accum + L >= nextDistance) {
-			// Sample lies on this segment
+			// sample is on this segment
 			const t = (nextDistance - accum) / L;
 			const p0 = points[segIndex];
 			const p1 = points[segIndex + 1];
@@ -66,7 +66,7 @@ function resampleCurve(points, spacing, includeFirst = true) {
 			output.push(sample);
 			nextDistance += spacing;
 		} else {
-			// Move to next segment
+			// next segment
 			accum += L;
 			segIndex++;
 		}

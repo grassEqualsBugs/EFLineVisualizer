@@ -7,11 +7,17 @@ let mouseOverCanvas = false;
 let mousePos = { x: 0, y: 0 };
 let mousePathOn = 0;
 let mousePosPath = [];
+let pathCanClose = false;
+let pathClosed = false;
 const fieldView = document.getElementById("fieldView");
+const testChargeMovement = document.getElementById("testChargeMovement");
+const testChargeArrows = document.getElementById("testChargeArrows");
 const fieldLines = new FieldLines();
 
 const expandedView = document.getElementById("expandedView");
 const pathFieldStrength = document.getElementById("pathFieldStrength");
+const pathIntegralValue = document.getElementById("pathIntegralValue");
+const pathIntegralSymbol = document.getElementById("pathIntegralSymbol");
 let backdropPressed = false;
 
 document.getElementById("expand").onclick = () => {
@@ -63,7 +69,7 @@ function resizeCanvas() {
 	const height = Math.max(1, Math.round(canvas.clientHeight * rect.height / canvas.offsetHeight * pixelRatio));
 	if (canvas.width == width && canvas.height == height) return;
 
-	// Match screen pixels while keeping the simulation in its original coordinates.
+	// same coordinates, more pixels
 	canvas.width = width;
 	canvas.height = height;
 	context.setTransform(width / canvasWidth, 0, 0, height / canvasHeight, 0, 0);
@@ -140,7 +146,7 @@ function update(dt) {
 		fieldLines.update(charges, canvasWidth, canvasHeight);
 	}
 	for (let i = movingCharges.length - 1; i >= 0; i--) {
-		movingCharges[i].update(charges, dt);
+		movingCharges[i].update(charges, dt, testChargeMovement.checked);
 		if (movingCharges[i].despawned) movingCharges.splice(i, 1);
 	}
 }
@@ -152,7 +158,7 @@ function draw() {
 		fieldLines.draw(context);
 	}
 	for (let i = 0; i < charges.length; i++) charges[i].draw(context);
-	for (let i = 0; i < movingCharges.length; i++) movingCharges[i].draw(context);
+	for (let i = 0; i < movingCharges.length; i++) movingCharges[i].draw(context, testChargeArrows.checked);
 
 	// path integral
 	if (mousePosPath.length > 0) {
@@ -165,6 +171,12 @@ function draw() {
 			context.lineTo(mousePosPath[i].x, mousePosPath[i].y);
 		}
 		context.stroke();
+		if (mousePathOn == 1) {
+			context.fillStyle = "gray";
+			context.beginPath();
+			context.arc(mousePosPath[0].x, mousePosPath[0].y, 3, 0, Math.PI * 2);
+			context.fill();
+		}
 	}
 }
 
@@ -172,6 +184,8 @@ function reset() {
 	charges = [];
 	movingCharges = [];
 	mousePosPath = [];
+	pathCanClose = false;
+	pathClosed = false;
 	mousePathOn = 0;
 }
 
@@ -180,6 +194,11 @@ document.getElementById("reset").onclick = reset;
 window.addEventListener("keydown", (e) => {
 	if (!mouseOverCanvas) return;
 	if (e.target && ["SELECT", "INPUT", "BUTTON"].includes(e.target.tagName)) return;
+	if (e.code == "Space") {
+		e.preventDefault();
+		if (!e.repeat) testChargeMovement.checked = !testChargeMovement.checked;
+		return;
+	}
 	if (e.repeat) return;
 	if (e.key == "p") {
 		charges.push(new StationaryCharge(mousePos.x, mousePos.y, 1));
@@ -204,44 +223,61 @@ window.addEventListener("keydown", (e) => {
 		reset();
 	} else if (e.key == "i") {
 		if (mousePathOn == 0) {
-			mousePosPath = [];
+			mousePosPath = [{ x: mousePos.x, y: mousePos.y }];
+			pathCanClose = false;
+			pathClosed = false;
 			mousePathOn = 1;
 		}
 	}
 });
 
 function computePathIntegral() {
-	let pathCharges = [];
-	mousePosPath.forEach((pos) => {
-		const charge = new TestCharge(pos.x, pos.y, -1);
-		charge.updateSuperposition(charges);
-		pathCharges.push(charge);
-	});
+	if (mousePosPath.length < 2) return 0;
+	const first = mousePosPath[0];
+	const last = mousePosPath[mousePosPath.length - 1];
 	let result = 0;
-	for (let i = 0; i < pathCharges.length - 1; i++) {
-		const first = pathCharges[i];
-		const second = pathCharges[i + 1];
-		const ds = {
-			x: second.x - first.x,
-			y: second.y - first.y,
-		};
-		const superposition = scalar(first.superposition, 1 / 100);
-		result += superposition.x * ds.x + superposition.y * ds.y;
+	// use the potential difference so a closed path doesn't pick up rounding error
+	for (let i = 0; i < charges.length; i++) {
+		const charge = charges[i];
+		function potential(pos) {
+			const r = mag({ x: pos.x - charge.x, y: pos.y - charge.y });
+			// matches the capped field inside a source charge
+			const value = r >= charge.radius ? 1 / r :
+				2 / charge.radius - r / (charge.radius * charge.radius);
+			return 200000 * charge.charge * value / 100;
+		}
+		result += potential(first) - potential(last);
 	}
 	return result;
 }
 
 window.addEventListener("keyup", (e) => {
 	if (e.key == "i") {
+		updateMousePath();
 		mousePathOn = 0;
 	}
 });
 
 function updateMousePath() {
-	if (mousePathOn == 1 && mouseOverCanvas) {
-		mousePosPath.push({ x: mousePos.x, y: mousePos.y });
-		mousePosPath = resampleCurve(mousePosPath, 0.5);
+	if (mousePathOn != 1 || !mouseOverCanvas) return;
+	const first = mousePosPath[0];
+	const last = mousePosPath[mousePosPath.length - 1];
+	const snapRadius = 12 * canvasWidth / canvas.getBoundingClientRect().width;
+	const dx = mousePos.x - last.x;
+	const dy = mousePos.y - last.y;
+	const lengthSquared = dx * dx + dy * dy;
+	if (lengthSquared == 0) return;
+	// check the whole mouse step so crossing the start also closes the path
+	const t = clamp(((first.x - last.x) * dx + (first.y - last.y) * dy) / lengthSquared, 0, 1);
+	const distance = mag({ x: last.x + t * dx - first.x, y: last.y + t * dy - first.y });
+	if (pathCanClose && distance <= snapRadius) {
+		mousePosPath.push({ x: first.x, y: first.y });
+		pathClosed = true;
+		mousePathOn = 0;
+		return;
 	}
+	if (mag({ x: mousePos.x - first.x, y: mousePos.y - first.y }) > snapRadius * 2) pathCanClose = true;
+	mousePosPath.push({ x: mousePos.x, y: mousePos.y });
 }
 
 (function step(time = performance.now()) {
@@ -254,7 +290,8 @@ function updateMousePath() {
 	context.fillStyle = "white";
 	context.fillRect(0, 0, canvasWidth, canvasHeight);
 	draw();
-	pathFieldStrength.textContent =
-		`Path integral strength: ${computePathIntegral().toFixed(3)}`;
+	pathIntegralSymbol.textContent = pathClosed ? "∮" : "∫";
+	const value = computePathIntegral();
+	pathIntegralValue.textContent = (Math.abs(value) < 0.0005 ? 0 : value).toFixed(3);
 	window.requestAnimationFrame(step);
 })();

@@ -2,6 +2,7 @@ class MovingCharge extends StationaryCharge {
 	constructor(x, y) {
 		super(x, y, 1);
 		this.radius = 6;
+		this.symbolWidth = 1.5;
 		this.mass = 0.5;
 		this.positiveColor = "black";
 		this.velocity = { x: 0, y: 0 };

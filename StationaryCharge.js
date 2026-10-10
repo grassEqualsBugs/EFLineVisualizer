@@ -2,6 +2,7 @@ class StationaryCharge {
 	constructor(x, y, charge) {
 		this.charge = charge;
 		this.radius = 10;
+		this.symbolWidth = 3;
 		this.x = x;
 		this.y = y;
 		this.positiveColor = "red";
@@ -38,15 +39,15 @@ class StationaryCharge {
 		context.fillStyle = "white";
 		context.fillRect(
 			this.x - this.radius / 2,
-			this.y - 1.5,
+			this.y - this.symbolWidth / 2,
 			this.radius,
-			3,
+			this.symbolWidth,
 		);
 		if (this.charge > 0) {
 			context.fillRect(
-				this.x - 1.5,
+				this.x - this.symbolWidth / 2,
 				this.y - this.radius / 2,
-				3,
+				this.symbolWidth,
 				this.radius,
 			);
 		}

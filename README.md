@@ -1,6 +1,6 @@
 # Electric Field Visualizer
 
-A simple **Electric Field Visualizer** built using **HTML5 Canvas** for intuitive, interactive visualization of electric field lines and potentials.
+A simple Electric Field Visualizer built using HTML5 Canvas for intuitive, interactive visualization of electric field lines and potentials.
 
 ## Overview
 
@@ -19,6 +19,6 @@ The black test charge accelerates in the field without affecting the source char
 
 ## Built With
 
-- **HTML5 Canvas**
-- **Vanilla JavaScript**
-- **CSS3**
+- HTML5 Canvas
+- Vanilla JavaScript
+- CSS3
